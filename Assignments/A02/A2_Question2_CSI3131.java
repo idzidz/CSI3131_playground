@@ -22,6 +22,9 @@ expressed as:
 fib0 = 0
 fib1 = 1
 fibn = fibn−1 + fibn−2
+
+Notes:
+
 */
 
 import java.util.Scanner;
