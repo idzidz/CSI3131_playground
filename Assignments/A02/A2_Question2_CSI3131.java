@@ -22,16 +22,19 @@ expressed as:
 fib0 = 0
 fib1 = 1
 fibn = fibn−1 + fibn−2
+
+Notes:
+
 */
 
 import java.util.Scanner;
 
 // Will be using this object to communicate between the Main thread and Worker threads.
 class FibonacciCollector{
-    private static int[] FibonacciCollectorValues;
+    private static long[] FibonacciCollectorValues;
 
-    public int[] getFibonacci(){return FibonacciCollectorValues;}
-    public void setFibonacci(int[] overrideCollection){FibonacciCollectorValues = overrideCollection;}
+    public long[] getFibonacci(){return FibonacciCollectorValues;}
+    public void setFibonacci(long[] overrideCollection){FibonacciCollectorValues = overrideCollection;}
 }
 
 //-- Class 1 (Worker Thread) --
@@ -42,7 +45,7 @@ class Worker1 extends Thread { // Java Threads created with call to start() meth
         int userInput = userInputStored();
 
         /* Initial fibonacci values to build off of. Will continue from here until >= required number of numbers. */
-        int[] FibonacciCollection = new int[userInput + 1];
+        long[] FibonacciCollection = new long[userInput + 1];
         FibonacciCollection[0] = 0;
         FibonacciCollection[1] = 1;
 
@@ -53,8 +56,6 @@ class Worker1 extends Thread { // Java Threads created with call to start() meth
         /* Storing information computed by worker thread into our object */
         FibonacciCollector fibonacciCollector = new FibonacciCollector();
         fibonacciCollector.setFibonacci(FibonacciCollection);
-
-        // System.out.println("I Am a Worker Thread");
     }
 
 
@@ -85,19 +86,17 @@ public class A2_Question2_CSI3131 {
             runner.join();
         } catch (InterruptedException ie) {
         }
-        System.out.println("Worker done.");
+        System.out.println("Worker done. \n");
  
         /* Getting information computed by worker thread */
         FibonacciCollector fibonacciCollector = new FibonacciCollector();
-        int[] fibonacciCollection = fibonacciCollector.getFibonacci();
+        long[] fibonacciCollection = fibonacciCollector.getFibonacci();
 
         /* Main process will now print the information computed by the worker process. */
         for (int i=0; i<fibonacciCollection.length-1; i++){
-            System.out.print(fibonacciCollection[i] + " ");
+            System.out.print(fibonacciCollection[i] + "\n");
         }
         System.out.println();
         System.out.println("Main thread done.");
-
-        //System.out.println("If this is working properly, we will find 1: " + doesThisWork[1]);
     }
 }
