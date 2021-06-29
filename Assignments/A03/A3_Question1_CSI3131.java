@@ -79,6 +79,7 @@ class Worker1 extends Thread { // Java Threads created with call to start() meth
                     System.out.println("Student " + currentStudent + " is waking up the TA");
                     int taHelping = randomIntGenerator();
                     passingStudent.setIsTABusy(true);
+                    passingStudent.setStudentWithTA(currentStudent);
                     System.out.println("Student " + currentStudent + " is currently getting help from the TA for " + taHelping + " seconds");
                     sleep(taHelping);
                     passingStudent.setIsTABusy(false);
@@ -90,19 +91,22 @@ class Worker1 extends Thread { // Java Threads created with call to start() meth
                     System.out.println("Student " + currentStudent + " is taking chair " + chairInfo.size());
                     passingStudent.setChairs(chairInfo);
 
-                    if (chairInfo.size() == 0){
+                    if (chairInfo.size() == 1){
                         passingStudent.setStudentInChairOne(currentStudent);
-                    }else if (chairInfo.size() == 1){
+                    }else if (chairInfo.size() == 2){
                         passingStudent.setStudentInChairTwo(currentStudent);
                     }
                     
                     if (currentStudent == passingStudent.getChairs().peek()){
                         join(passingStudent.getStudentWithTA());                //put pid of studuent currently helping TA (Waits until that PID terminates, then joins up next)
-                    } else if (currentStudent == passingStudent.getStudentInChairOne()){
-                        join(passingStudent.getStudentInChairOne());
+                        // chairInfo.poll();
+                        // passingStudent.setChairs(chairInfo);
                     } else if (currentStudent == passingStudent.getStudentInChairTwo()){
+                        join(passingStudent.getStudentInChairOne());
+                    } else{
                         join(passingStudent.getStudentInChairTwo());
-                    }            
+                    }
+                    /// MUTEX
                 }
                 else{ //BACK to programming/working ('sleep()' their thread) 
                     if (!amINext){
