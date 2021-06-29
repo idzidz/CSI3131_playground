@@ -9,7 +9,7 @@ Note:
 - //3 chairs  [static == when create, not blank slate] [default value of boolean array is all FALSE]
 Assumptions:
 - student sleep() == student working (programming)
-- Assumes ALL students will be helped in the duration
+- Assumes ALL students will be helped by the TA in the duration
 */
 
 import java.util.PriorityQueue;
