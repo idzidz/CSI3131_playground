@@ -5,6 +5,12 @@ Problem Description:
 coordinates the activities of the TA and the students
 
 Note:
+Workflow
+1) Students Program/work('sleep()' their thread) for a random set time
+2) After 'sleep()' time up, goes to check on TA for help
+3) Get help from TA OR Wait in chair OR back to programming
+4) Repeat
+
 - If 'sleep()' or 'wait()' need try catch
 - //3 chairs  [static == when create, not blank slate] [default value of boolean array is all FALSE]
 Assumptions:
@@ -27,10 +33,26 @@ class ThreadCommunicator{
     protected boolean areChairsNotFull(){ return chairs.size() < 3; }
 
     /// Checking if TA is available ///
-    private static boolean isTAFree;
-    protected boolean getIsTAFree(){return isTAFree;}
-    protected void setIsTAFree(boolean availability){isTAFree = availability;}
-       
+    private static boolean isTABusy; //deafult value = false
+    protected boolean getIsTABusy(){return isTABusy;}
+    protected void setIsTABusy(boolean availability){isTABusy = availability;}
+
+    /// Current student with the TA ///
+    private static long studentWithTA;
+    protected long getStudentWithTA(){return studentWithTA;}
+    protected void setStudentWithTA(long currStudentTakingTA){studentWithTA = currStudentTakingTA;}
+
+    /// Current student with the TA ///
+    private static long studentInChairOne;
+    protected long getStudentInChairOne(){return studentInChairOne;}
+    protected void setStudentInChairOne(long currStudentTakingTA){studentInChairOne = currStudentTakingTA;}
+
+          /// Current student with the TA ///
+    private static long StudentInChairTwo;
+    protected long getStudentInChairTwo(){return StudentInChairTwo;}
+    protected void setStudentInChairTwo(long currStudentTakingTA){StudentInChairTwo = currStudentTakingTA;}
+}
+
 
 ///////////////-- worker thread () -- ////////////////////////////
 class Worker1 extends Thread { // Java Threads created with call to start() method: extend Thread class or use Runnable interface
@@ -40,36 +62,75 @@ class Worker1 extends Thread { // Java Threads created with call to start() meth
     {
         try
         {
-            System.out.println("Worker (Student) has started programming " + Thread.currentThread().getId());     //Gets thread process number  
-            sleep(randomNumber);     
-
+            //Students working/programming for random periods of time (Time until they check for TA for help)
+            long currentStudent = Thread.currentThread().getId();   //Gets thread process number 
+            //System.out.println("TA is sleeping"); // Move to main?
+            System.out.println("Student " + currentStudent + " is programming for " + (randomIntGenerator()/100)  + " seconds");
+            sleep(randomIntGenerator());    
+            
+            boolean amINext = false;
 
             ThreadCommunicator passingStudent = new ThreadCommunicator();
-            Queue<Long> chairInfo = passingStudent.getChairs();
 
-            for (int i = 0; i < 3; i++){
-                if (passingStudent.areChairsNotFull())
-                {
-                    // System.out.println("Student [" + Thread.currentThread().getId() + "] is taking chair: " + (i+1));
-                    // System.out.println("Size of LL: " + chairInfo.size());
-                    chairInfo.add(currentThread().getId());
-                    System.out.println("Size of PQ: " + chairInfo.size());
-                    passingStudent.setChairs(chairInfo);
+            while(true){
+                //Student checking for TA availability
+                if (!passingStudent.getIsTABusy()) { //If TA is NOT busy
+                    //Gets help from TA for random amount of time
+                    System.out.println("Student " + currentStudent + " is waking up the TA");
+                    int taHelping = randomIntGenerator();
+                    passingStudent.setIsTABusy(true);
+                    System.out.println("Student " + currentStudent + " is currently getting help from the TA for " + taHelping + " seconds");
+                    sleep(taHelping);
+                    passingStudent.setIsTABusy(false);
                     break;
                 }
+                else if(passingStudent.areChairsNotFull()) {   //Check if chairs NOT full
+                    Queue<Long> chairInfo = passingStudent.getChairs();
+                    chairInfo.add(currentStudent);
+                    System.out.println("Student " + currentStudent + " is taking chair " + chairInfo.size());
+                    passingStudent.setChairs(chairInfo);
 
+                    if (chairInfo.size() == 0){
+                        passingStudent.setStudentInChairOne(currentStudent);
+                    }else if (chairInfo.size() == 1){
+                        passingStudent.setStudentInChairTwo(currentStudent);
+                    }
+                    
+                    if (currentStudent == passingStudent.getChairs().peek()){
+                        join(passingStudent.getStudentWithTA());                //put pid of studuent currently helping TA (Waits until that PID terminates, then joins up next)
+                    } else if (currentStudent == passingStudent.getStudentInChairOne()){
+                        join(passingStudent.getStudentInChairOne());
+                    } else if (currentStudent == passingStudent.getStudentInChairTwo()){
+                        join(passingStudent.getStudentInChairTwo());
+                    }            
+                }
+                else{ //BACK to programming/working ('sleep()' their thread) 
+                    if (!amINext){
+                        System.out.println("-- Student " + currentStudent + " is going back to programming for " + (randomIntGenerator()/100) + " seconds");
+                        sleep(randomIntGenerator());
+                    }
+                    
+                }
             }
 
-            
-            passingStudent.sleep(1000);
-
-
+            System.out.println("Student [" + currentStudent + "] is done with the TA and left the building");
 
         }catch(InterruptedException e){
             System.out.println("Error: " + e);
         }
     }
+
+
+    /////---- HELPER FUNCTION (Random Integer Generator: for random interval time) ----////////
+    public int randomIntGenerator(){
+        Random generate = new Random();
+        int randomNumber = generate.nextInt(5000) + 1000; //nextInt(bound) + min
+        return randomNumber;
+    }
 }
+
+
+
 
 
 
@@ -81,7 +142,7 @@ public class A3_Question1_CSI3131
     {
         //Declaring Variables
         Random randomNum = new Random();
-		int numberOfStudents = randomNum.nextInt(1) +5; //nextInt(bound) + min
+		int numberOfStudents = randomNum.nextInt(1) + 5; //nextInt(bound) + min
         Worker1 runner;
 
         //Creating Multiple Threads to run in parallel (Students)
@@ -96,7 +157,9 @@ public class A3_Question1_CSI3131
          //- When TA finishes helping student:
             //- TA check if students waiting in hall (Help students in order; else return to napping)
 
-        ThreadCommunicator availabilityTA = new ThreadCommunicator();
+        ThreadCommunicator TA = new ThreadCommunicator();
+        //System.out.println("TA is sleeping");   
+
 
             
 
@@ -112,10 +175,5 @@ public class A3_Question1_CSI3131
         //     runner.join();
         // } catch (InterruptedException ie) {
         // }
-
-        
     }
-
-
 }
-
