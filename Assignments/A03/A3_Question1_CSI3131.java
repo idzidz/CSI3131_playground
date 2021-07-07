@@ -103,7 +103,6 @@ class Worker1 extends Thread { // Java Threads created with call to start() meth
                             studentStatus.setChairs(chairInfo);
                             throw new InterruptedException(); // Goes to Catch Block (Interrupts the thread) [can put msg in parameter]
                         }
-
                     }
                     // System.out.println("Student [" + currentStudent + "] is currently waiting for a permit"); //TEST
 
