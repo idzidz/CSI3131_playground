@@ -29,29 +29,32 @@ class Producer extends Thread{
     Communicator communicator = new Communicator();
 
     public void run(){
-        //System.out.println("We wil produce " + communicator.getCounter() + " catalan numbers.");
-        //communicator.decrementCounter();
-        //System.out.println("Are our decrements working? " + communicator.getCounter());
 
+        // While we still have values to write
         while (communicator.getWriteCounter() != 0){
             try{
+                // Acquire semaphore which was set to 1. Mutex therefore atomic instructions follow. (Mutex is a semaphore with a value of 1)
                 communicator.acquireSemaphore();
+
+                // Fetching Communicator object info
                 LinkedList<Long> update = communicator.getCommunicator();
                 int writeCounter = communicator.getWriteCounter();
 
+                // Calculate and store the Catalan number into our LL
                 long catalanNumber = calculateCatalanNumber(writeCounter);
                 update.add(catalanNumber);
                 communicator.setCommunicator(update);
-                communicator.decrementWriteCounter();
 
+                // Decrement the write counter and release the semaphore
+                communicator.decrementWriteCounter();
                 communicator.releaseSemaphore();
-                sleep(1);
             }
             catch(InterruptedException e){}
         }
     }
 
     public long calculateCatalanNumber(int n){
+        // Catalan number arithmetic. Could probably be made more efficient.
         long numerator = 1;
         long denominator1 = 1;
         long denominator2 = 1;
@@ -80,20 +83,23 @@ class Consumer extends Thread{
         
         while (communicator.getReadCounter() != 0){
             try{
+                // Acquire semaphore
                 communicator.acquireSemaphore();
-
                 LinkedList<Long> read = communicator.getCommunicator();
 
+                // If we have values to read from the LL, enter
                 if(read.peek() != null){
+                    // Reading Communicator object info
                     long currRead = read.pop();
                     communicator.setCommunicator(read);
+
+                    // Consumer reads out the value they read. Decrement counter value and release semaphore.
                     System.out.println("Currently reading the value of: " + currRead + " from shared communicator");
                     communicator.decrementReadCounter();
                     communicator.releaseSemaphore();
-                    sleep(1);
+                // Else release the semaphore and let the producer write more.
                 }else{
                     communicator.releaseSemaphore();
-                    sleep(1);
                 }                
             }catch(InterruptedException e){}
         }
